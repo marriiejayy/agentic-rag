@@ -211,7 +211,7 @@ Found {len(results)} relevant results.
     except Exception as e:
         return f":warning: Search error: {str(e)}\nPlease try again or rephrase your query."
 
-print(":white_check_mark: Web search tool created")
+print(" Web search tool created")
 
 # Testing tools directly 
 print("\n Testing tools directly:")
@@ -235,7 +235,7 @@ except Exception as e:
 
 tools = [weather_checker, dictionary_lookup, web_search]
 llm_with_tools = llm.bind_tools(tools)
-print(f"\n:white_check_mark: LLM bound to {len(tools)} tools: {[t.name for t in tools]}")
+print(f"\n LLM bound to {len(tools)} tools: {[t.name for t in tools]}")
 
 # System prompt
 sys_msg = SystemMessage(content="""You are a versatile assistant with access to multiple tools.
@@ -291,7 +291,7 @@ builder.add_edge("tools", "assistant")
 memory = MemorySaver()
 agent = builder.compile(checkpointer=memory)
 
-print(":white_check_mark: Multi-tool agent compiled successfully!")
+print(" Multi-tool agent compiled successfully!")
 
 # Visualize the graph
 try:

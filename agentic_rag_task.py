@@ -19,7 +19,7 @@ if not openai_api_key:
     raise ValueError("OPENAI_API_KEY not found!")
 
 llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.5, api_key=openai_api_key)
-print(f":white_check_mark: LLM initialized: {llm.model_name}")
+print(f" LLM initialized: {llm.model_name}")
 
 # 1. document collection
 python_docs = [
@@ -37,13 +37,13 @@ python_docs = [
 
 doc_objects = [Document(page_content=doc, metadata={"source": f"python_doc_{i+1}"}) 
                for i, doc in enumerate(python_docs)]
-print(f":white_check_mark: Created {len(doc_objects)} Python documents")
+print(f" Created {len(doc_objects)} Python documents")
 
 #  2. vector setup
 embeddings = OpenAIEmbeddings(model="text-embedding-3-small", api_key=openai_api_key)
 text_splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
 doc_splits = text_splitter.split_documents(doc_objects)
-print(f":white_check_mark: Split into {len(doc_splits)} chunks")
+print(f" Split into {len(doc_splits)} chunks")
 
 chroma_path = "./python_tutorials_db"
 vectorstore = Chroma.from_documents(
@@ -51,9 +51,9 @@ vectorstore = Chroma.from_documents(
     embedding=embeddings,
     persist_directory=chroma_path
 )
-print(f":white_check_mark: Vector store created at {chroma_path}")
+print(f" Vector store created at {chroma_path}")
 
-# ==================== 3. RETRIEVAL TOOL ====================
+# 3. Retrival tool
 @tool
 def retrieve_python_docs(query: str) -> str:
     """Search Python programming tutorials. Use for Python syntax, functions, classes, code examples."""
@@ -67,9 +67,9 @@ def retrieve_python_docs(query: str) -> str:
                               for r in results])
     return formatted
 
-print(":white_check_mark: Retrieval tool created")
+print(" Retrieval tool created")
 
-# ==================== 4. AGENTIC RAG SYSTEM ====================
+# 4. Agentic rag system
 system_prompt = SystemMessage(content="""You are PyTutor, a Python programming assistant.
 
 RETRIEVE WHEN:
@@ -104,12 +104,12 @@ builder.add_conditional_edges("assistant", should_continue, {"tools": "tools", "
 builder.add_edge("tools", "assistant")
 
 agent = builder.compile(checkpointer=MemorySaver())
-print(":white_check_mark: Agentic RAG system compiled")
+print(" Agentic RAG system compiled")
 
-# ==================== 5. TESTING ====================
+# 5. Testing
 def test_agent(query: str, thread_id: str = "test"):
     print(f"\n{'='*60}")
-    print(f":bust_in_silhouette:: {query}")
+    print(f": {query}")
     
     result = agent.invoke(
         {"messages": [HumanMessage(content=query)]},
@@ -119,8 +119,8 @@ def test_agent(query: str, thread_id: str = "test"):
     used_retrieval = any(isinstance(m, AIMessage) and m.tool_calls for m in result["messages"])
     answer = result["messages"][-1].content if result["messages"][-1].content else "No answer"
     
-    print(f":robot_face:: {answer[:150]}...")
-    print(f":bar_chart:: {'RETRIEVED' if used_retrieval else 'DIRECT'}")
+    print(f" {answer[:150]}...")
+    print(f" {'RETRIEVED' if used_retrieval else 'DIRECT'}")
     print("="*60)
     
     return used_retrieval
@@ -142,30 +142,29 @@ for query, expected in tests:
     actual = test_agent(query, f"test_{len(results)}")
     correct = actual == expected
     results.append(correct)
-    print(f"Expected: {'RETRIEVE' if expected else 'DIRECT'} | {':white_check_mark:' if correct else ':x:'}")
+    print(f"Expected: {'RETRIEVE' if expected else 'DIRECT'} | {':' if correct else ':x:'}")
 
 accuracy = sum(results) / len(results) * 100
-print(f"\n:chart_with_upwards_trend: Accuracy: {accuracy:.0f}% ({sum(results)}/{len(results)} correct)")
+print(f"\n Accuracy: {accuracy:.0f}% ({sum(results)}/{len(results)} correct)")
 
 # Interactive mode
 def interactive_mode():
     print("\n" + "="*60)
-    print(":snake: Python Tutor - Interactive Mode")
+    print(" Python Tutor - Interactive Mode")
     print("Type 'exit' to quit")
     print("="*60)
     
     thread_id = "interactive"
     while True:
-        query = input("\n:bust_in_silhouette: You: ").strip()
+        query = input("\n: You: ").strip()
         if query.lower() in ["exit", "quit"]:
-            print(":robot_face:: Goodbye! Happy coding!")
+            print(" Goodbye! Happy coding!")
             break
         
         result = agent.invoke(
             {"messages": [HumanMessage(content=query)]},
             config={"configurable": {"thread_id": thread_id}}
         )
-        print(f":robot_face:: {result['messages'][-1].content}")
+        print(f" {result['messages'][-1].content}")
 
-# Uncomment to run:
-# interactive_mode()
+interactive_mode()
