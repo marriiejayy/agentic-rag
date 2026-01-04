@@ -125,7 +125,7 @@ def test_agent(query: str, thread_id: str = "test"):
     
     return used_retrieval
 
-print("\n:test_tube: TEST CASES:")
+print("\n: TEST CASES:")
 print("="*60)
 
 # Test cases
@@ -158,7 +158,7 @@ def interactive_mode():
     while True:
         query = input("\n: You: ").strip()
         if query.lower() in ["exit", "quit"]:
-            print(" Goodbye! Happy coding!")
+            print(" Goodbye! ")
             break
         
         result = agent.invoke(

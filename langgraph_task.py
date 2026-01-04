@@ -4,6 +4,7 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
 import os
+import time
 
 # loading environment variables from .env file 
 load_dotenv()
@@ -77,7 +78,57 @@ def run_customer_conversation(user_input: str, thread_id: str = "default_session
         elif isinstance(message, AIMessage):
             print(f" Support: {message.content}")
     
-    print("\n" + "="*70)
+    print("\n" + "="*60)
     return result
 
 
+# interactive chat
+def interactive_customer_support():
+    """
+    Live chat with your customer support agent.
+    """
+    print("\n" + "="*70)
+    print(" MARRIEJAYS GADGETS - CUSTOMER SUPPORT")
+    print("="*60)
+    print("Type your message and press Enter.")
+    print("Type '/new' to start fresh, '/exit' to quit.")
+    print("="*60 + "\n")
+    
+    thread_id = "live_chat_001"
+    conversation_count = 0
+    
+    while True:
+        try:
+            user_input = input(f"[Chat {conversation_count+1}]  You: ").strip()
+        except KeyboardInterrupt:
+            print("\n\n Support: Thanks for contacting Marriejays! Have a great day.\n")
+            break
+        
+        # Handle commands
+        if user_input.lower() == "/exit":
+            print("\n Support: Thank you for contacting Marriejays Gadgets. Goodbye!\n")
+            break
+        elif user_input.lower() == "/new":
+            thread_id = f"live_chat_{int(time.time())}"
+            conversation_count = 0
+            print(f" New conversation started: {thread_id}")
+            continue
+        elif user_input == "":
+            continue
+        
+        # Run the agent
+        print(" Support: Thinking...")
+        result = customer_support_agent.invoke(
+            {"messages": [HumanMessage(content=user_input)]},
+            config={"configurable": {"thread_id": thread_id}}
+        )
+        
+        # Display response
+        last_message = result["messages"][-1]
+        if isinstance(last_message, AIMessage):
+            print(f"\n Support: {last_message.content}\n")
+        
+        conversation_count += 1
+
+if __name__ == "__main__":
+    interactive_customer_support()

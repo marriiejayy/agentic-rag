@@ -5,7 +5,6 @@ from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, Tool
 from langchain_core.tools import tool
 from langchain_openai import ChatOpenAI
 from dotenv import load_dotenv
-from IPython.display import Image, display
 from typing import Literal
 from duckduckgo_search import DDGS
 import random
@@ -294,11 +293,11 @@ agent = builder.compile(checkpointer=memory)
 print(" Multi-tool agent compiled successfully!")
 
 # Visualize the graph
-try:
-    display(Image(agent.get_graph().draw_mermaid_png()))
-except Exception as e:
-    print(f"Graph structure: START → assistant → [conditional] → tools → assistant → END")
-    print(f"(Visualization error: {e})")
+# try:
+#     display(Image(agent.get_graph().draw_mermaid_png()))
+# except Exception as e:
+#     print(f"Graph structure: START → assistant → [conditional] → tools → assistant → END")
+#     print(f"(Visualization error: {e})")
 
 # Helper function
 def run_multi_tool_agent(user_input: str, thread_id: str = "multi_tool_test", verbose: bool = True):
@@ -335,3 +334,76 @@ def run_multi_tool_agent(user_input: str, thread_id: str = "multi_tool_test", ve
     return result
 
 print("Agent ready for testing!")
+
+
+# Interactive chat
+def interactive_multi_tool_chat():
+    """
+    Live chat with your multi-tool agent.
+    """
+    print("\n" + "="*60)
+    print("  MULTI-TOOL ASSISTANT - INTERACTIVE MODE")
+    print("="*60)
+    print("Try these types of queries:")
+    print("• 'Weather in [city]'")
+    print("• 'Define [word]'")
+    print("• 'Search for [topic]'")
+    print("• General questions (no tools)")
+    print("Commands: /new (new session), /thread (show ID), /exit")
+    print("="*70 + "\n")
+    
+    thread_id = "interactive_session"
+    session_num = 1
+    
+    while True:
+        try:
+            user_input = input(f"[Session {session_num}]  You: ").strip()
+        except KeyboardInterrupt:
+            print("\n\n Session ended!")
+            break
+        
+        if user_input.lower() == "/exit":
+            print("\n: Goodbye!")
+            break
+        elif user_input.lower() == "/new":
+            session_num += 1
+            thread_id = f"session_{session_num}"
+            print(f" New session: {thread_id}")
+            continue
+        elif user_input.lower() == "/thread":
+            print(f" Thread ID: {thread_id}")
+            continue
+        elif user_input == "":
+            continue
+        
+        # Running agent 
+        print(": Thinking...")
+        result = agent.invoke(
+            {"messages": [HumanMessage(content=user_input)]},
+            config={"configurable": {"thread_id": thread_id}}
+        )
+        
+        #results 
+        print("\n" + "-"*50)
+        
+        tool_used = False
+        for msg in result["messages"]:
+            if isinstance(msg, AIMessage):
+                if msg.tool_calls:
+                    tool_used = True
+                    for tc in msg.tool_calls:
+                        print(f" Called tool: {tc['name']}")
+                elif msg.content:
+                    print(f": {msg.content}")
+            elif isinstance(msg, ToolMessage):
+                print(f" Tool result: {msg.content[:100]}...")
+        
+        if tool_used:
+            print(f"\n Decision: Used tools")
+        else:
+            print(f"\n Decision: Answered directly")
+        
+        print("-"*50 + "\n")
+
+if __name__ == "__main__":
+    interactive_multi_tool_chat()
